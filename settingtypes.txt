@@ -1,0 +1,3 @@
+
+# Preferred order of supported mob libraries.
+mobb.order_preference (Mob library order preference) enum mobkit.mobs mobkit.mobs,mobs.mobkit
