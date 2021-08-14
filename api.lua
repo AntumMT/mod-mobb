@@ -139,22 +139,55 @@ local check = {
 				return false, self:format_prefix(prefix, field) .. "field wrong type"
 			end
 
-			if type(value) == "table" and type(base_def.fields) == "table" then
+			if type(def[field]) == "table" and type(base_def.fields) == "table" then
 				local next_field = field
 				if prefix ~= "" then
 					next_field = prefix .. "." .. next_field
+				end
+
+				if value == nil then
+					-- make sure parent field exists
+					value = {}
 				end
 
 				local ret, err = self:fields(base_def.fields, value, next_field)
 				if not ret then
 					return false, err
 				end
+
+				-- update definition
+				def[field] = value
 			end
 
 			if value ~= nil and type(base_def.check_value) == "function" then
 				local ret, err = base_def.check_value(value)
 				if not ret then
 					return false, err
+				end
+			end
+
+			-- check for default value
+			if type(base_def) == "table" then
+				if base_def.default ~= nil and base_def.default ~= "nil" then
+					if def[field] == nil then
+						def[field] = base_def.default
+					end
+				end
+			end
+
+			-- check for injections
+			if type(base_def) == "table" and type(base_def.inject) == "function" then
+				if def[field] == nil then
+					def[field] = {}
+				end
+
+				if type(def[field]) == "table" then
+					local new_keys = base_def.inject()
+					for k, v in pairs(new_keys) do
+						def[field][k] = v
+					end
+				else
+					mobb.log("warning", "cannot inject into non-table field \"" .. k .. "\"")
 				end
 			end
 		end
