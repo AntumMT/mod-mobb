@@ -99,7 +99,7 @@ local check = {
 			end
 		end
 
-		return typematch, base.required == true, base.fields
+		return typematch, base.required == true
 	end,
 
 	-- @return typematch, err
@@ -121,15 +121,15 @@ local check = {
 		end
 
 		-- check for unknown fields
-		for k in pairs(def) do
-			if base[k] == nil then
-				return false, self:format_prefix(prefix) .. "unrecognized field: " .. k
+		for field in pairs(def) do
+			if base[field] == nil then
+				return false, self:format_prefix(prefix) .. "unrecognized field: " .. field
 			end
 		end
 
 		for field, base_def in pairs(base) do
 			local value = def[field]
-			local typematch, required, fields = self:type(base_def, value)
+			local typematch, required = self:type(base_def, value)
 
 			if required and value == nil then
 				return false, self:format_prefix(prefix) .. "missing required field: " .. field
@@ -139,13 +139,13 @@ local check = {
 				return false, self:format_prefix(prefix, field) .. "field wrong type"
 			end
 
-			if type(value) == "table" and type(fields) == "table" then
+			if type(value) == "table" and type(base_def.fields) == "table" then
 				local next_field = field
 				if prefix ~= "" then
 					next_field = prefix .. "." .. next_field
 				end
 
-				local ret, err = self:fields(fields, value, next_field)
+				local ret, err = self:fields(base_def.fields, value, next_field)
 				if not ret then
 					return false, err
 				end
