@@ -269,17 +269,58 @@ local drop_def = {
 --  @table SpawnDef
 local spawn_def = {}
 
+--- Combat definition.
+--
+--  @table CombatDef
+--  @tfield int damage
+local combat_def = {
+	damage = {
+		"number",
+		default = 5,
+	},
+}
+
 --- Behavior definition.
 --
 --  @table BehaviorDef
+--  @tparam boolean hostile
 --  @tparam[opt] CombatDef combat
---  @tparam[opt] SpeedDef speed
+--  @tparam table speed Fields can be "walk" & "run"
 --  @tparam[opt] SearchDef search
 --  @tparam[opt] table modes List of mode definitions (`ModeDef`).
 local behavior_def = {
-	combat = {"table", fields={}},
-	speed = {"table", fields={}},
-	search = {"table", fields={}},
+	hostile = {"boolean", required=true},
+	combat = {
+		"table",
+		fields = combat_def,
+	},
+	speed = {
+		"table",
+		fields = {walk="number", run="number"},
+		inject = function()
+			local _call = function(self, t)
+				local value
+				if t == "walk" or t == "run" then
+					local value = self[t]
+					if value == nil then
+						-- default speed for walk & run
+						value = 1
+					end
+				end
+
+				return value
+			end
+
+			return {["get"]=_call}
+		end,
+	},
+	search = {
+		"table",
+		fields={},
+		inject = function()
+			return {["get"]=function(self, t) return self[t] end}
+		end,
+	},
 	modes = {"table", fields={}},
 }
 
@@ -302,15 +343,23 @@ local sounds_def = {
 --- Animation definition.
 --
 --  @table AnimationDef
+--  @tfield table idle
 local animation_def = {}
+for _, ani in ipairs({"idle", "walk", "run", "attack", "death"}) do
+	animation_def[ani] = {
+		"table",
+		required = true, -- FIXME: not all animation types should be required
+		fields = {start={"number", required=true}, stop={"number", required=true}},
+	}
+end
 
 
 --- Mob definition.
 --
 --  @table MobDef
 --  @tfield[opt] string nametag
+--  @tfield[opt] string type (mobs)
 --  @field hp Can be `int` or `table` ({min=<value>, max=<value>}).
---  @tfield boolean hostile
 --  @tfield[opt] boolean knockback (default: true)
 --  @tfield[opt] boolean sneaky (default: false)
 --  @tfield[opt] boolean floats (default: false)
@@ -325,12 +374,12 @@ local animation_def = {}
 --  @tfield[opt] AnimationDef animation
 local mob_def = {
 	nametag = "string",
+	type = "string",
 	hp = {
 		{"number", "table"},
 		required = true,
 		fields = {min={"number", required=true}, max={"number", required=true}},
 	},
-	hostile = {"boolean", required=true},
 	knockback = "boolean",
 	sneaky = "boolean",
 	floats = "boolean",
@@ -354,7 +403,11 @@ local mob_def = {
 		end,
 	},
 	spawn = {"table", fields=spawn_def},
-	behavior = {"table", fields=behavior_def},
+	behavior = {
+		"table",
+		required=true,
+		fields=behavior_def,
+	},
 	sounds = {"table", fields=sounds_def},
 	animation = {"table", fields=animation_def},
 }
