@@ -9,10 +9,20 @@ Mob registration compatible with `mobkit` & `mobs_redo`.
 ### Usage
 
 Methods:
-```lua
+```
 mobb.register(def)
 - Registers a new mob with enabled library.
-- `def`: entity definition
+- parameters:
+  - def: entity definition
+```
+
+Settings:
+```
+mobb.order_preference
+- Preferred order of supported mob libraries.
+- type:    enum
+- options: mobkit.mobs,mobs.mobkit
+- default: mobkit.mobs
 ```
 
 ### Licensing
