@@ -200,7 +200,7 @@ local check = {
 
 --- Physical definition.
 --
---  @table PhyscialDef
+--  @table PhysicalDef
 --  @tfield table collisionbox
 --  @tfield[opt] number rotation
 local physical_def = {
@@ -283,10 +283,10 @@ local combat_def = {
 --- Behavior definition.
 --
 --  @table BehaviorDef
---  @tparam boolean hostile
+--  @tparam bool hostile
 --  @tparam[opt] CombatDef combat
 --  @tparam table speed Fields can be "walk" & "run"
---  @tparam[opt] SearchDef search
+--  @tparam[opt] table search
 --  @tparam[opt] table modes List of mode definitions (`ModeDef`).
 local behavior_def = {
 	hostile = {"boolean", required=true},
@@ -360,9 +360,9 @@ end
 --  @tfield[opt] string nametag
 --  @tfield[opt] string type (mobs)
 --  @field hp Can be `int` or `table` ({min=<value>, max=<value>}).
---  @tfield[opt] boolean knockback (default: true)
---  @tfield[opt] boolean sneaky (default: false)
---  @tfield[opt] boolean floats (default: false)
+--  @tfield[opt] bool knockback (default: true)
+--  @tfield[opt] bool sneaky (default: false)
+--  @tfield[opt] bool floats (default: false)
 --  @tfield[opt] number step_height (default: 1)
 --  @tfield[opt] number jump_height (default: 1)
 --  @tfield PhysicalDef physical Physical definition.

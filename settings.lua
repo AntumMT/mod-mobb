@@ -1,4 +1,9 @@
 
+--- Mob Bridge Settings
+--
+--  @topic settings
+
+
 --- Preferred order of supported mob libraries.
 --
 --  @setting mobb.order_preference
