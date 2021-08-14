@@ -21,6 +21,15 @@ for _, lib in ipairs(mobb.libs) do
 end
 
 if not register then
+	mobb.register = function(name)
+		local err_msg = "compatible mob library not available, cannot register"
+		if type(name) == "string" then
+			err_msg = err_msg .. " \"" .. name .. "\""
+		end
+
+		mobb.log("error", err_msg)
+	end
+
 	return false, "compatible mob library not found, install one of the following: "
 		.. table.concat(mobb.libs.default:split("."), ", ")
 end

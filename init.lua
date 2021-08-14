@@ -29,6 +29,5 @@ else
 end
 
 if not ret then
-	core.log("error", err)
-	mobb = nil
+	mobb.log("error", err)
 end
