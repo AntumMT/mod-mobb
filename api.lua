@@ -10,7 +10,16 @@ for _, lib in ipairs(mobb.libs) do
 	mobb.log("action", "checking for mob library " .. lib .. " ...")
 
 	if core.get_modpath(lib) then
-		local init_register = loadfile(mobb.modpath .. "/register/" .. lib .. ".lua")
+		local init_register, err = loadfile(mobb.modpath .. "/register/" .. lib .. ".lua")
+		-- file not existing just means we don't support that lib
+		if err and err:find("No such file or directory$") then
+			err = nil
+		end
+
+		if err then
+			error(err)
+		end
+
 		if init_register then
 			mobb.log("action", "using mob library " .. lib)
 
