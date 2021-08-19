@@ -231,11 +231,13 @@ local physical_def = {
 --- Visual definition.
 --
 --  @table VisualDef
---  @tfield string mesh
+--  @tfield[opt] string type
+--  @tfield[opt] string mesh
 --  @tfield string table
 --  @tfield[opt] table size
 local visual_def = {
-	mesh = {"string", required=true},
+	type = "string",
+	mesh = "string",
 	textures = {
 		"table",
 		required=true,
@@ -351,7 +353,7 @@ local modes_def = {
 --  @tfield[opt] bool knockback
 --  @tfield[opt] CombatDef combat
 --  @tfield table speed Fields can be "walk" & "run"
---  @tfield[opt] table search Fields: radius (number)
+--  @tfield[opt] table search Fields: radius (number), target (string)
 --  @tfield[opt] ModesDef modes List of mode definitions.
 --  @tfield[opt] number step_height
 --  @tfield[opt] number jump_height
@@ -382,12 +384,12 @@ local behavior_def = {
 	},
 	search = {
 		"table",
-		fields = {radius="number"},
+		fields = {radius="number", target="string"},
 		inject = function()
 			return {["get"]=function(self, t) return self[t] end}
 		end,
 	},
-	modes = {"table", fields=mode_def},
+	modes = {"table", fields=modes_def},
 	step_height = "number",
 	jump_height = "number",
 	follow = {{"string", "table"}},
@@ -413,14 +415,34 @@ local sounds_def = {
 --- Animation definition.
 --
 --  @table AnimationDef
---  @tfield table idle
+--  @tfield int start
+--  @tfield int stop
+--  @tfield[opt] int speed
+--  @tfield[opt] bool loop
+--  @tfield[opt] bool rotate
+--  @tfield[opt] number duration
+--  @usage
+--  animation = {
+--    idle = {start=0, stop=80, speed=15},
+--    death = {start=81, stop=101, speed=28, loop=false, rotate=false, duration=2.12},
+--  }
 local animation_def = {}
 for _, ani in ipairs({"idle", "walk", "run", "attack", "death"}) do
 	animation_def[ani] = {
 		"table",
-		required = true, -- FIXME: not all animation types should be required
-		fields = {start={"number", required=true}, stop={"number", required=true}},
+		--required = true, -- FIXME: not all animation types should be required
+		fields = {
+			start = {"number", required=true},
+			stop = {"number", required=true},
+			speed = "number",
+			loop = "boolean",
+			duration = "number",
+		},
 	}
+
+	if ani == "death" then
+		animation_def[ani].fields.rotate = {{"boolean", "number"}}
+	end
 end
 
 

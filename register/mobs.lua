@@ -17,7 +17,7 @@ return function(name, def)
 		knock_back = def.behavior.knockback,
 		follow = def.behavior.follow,
 		reach = def.behavior.combat.radius,
-		attack_players = def.behavior.search:get("type") == "player",
+		attack_players = def.behavior.search:get("target") == "player",
 		makes_footstep_sound = not def.behavior.sneaky,
 		sounds = {
 			distance = def.sounds.distance,
@@ -34,6 +34,7 @@ return function(name, def)
 		drops = {},
 		collisionbox = def.physical.collisionbox,
 		selectionbox = def.physical.selectionbox,
+		visual = def.visual.type,
 		visual_size = def.visual.size,
 		textures = def.visual.textures,
 		mesh = def.visual.mesh,
