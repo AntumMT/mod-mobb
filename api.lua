@@ -353,8 +353,8 @@ local modes_def = {
 --  @tfield table speed Fields can be "walk" & "run"
 --  @tfield[opt] table search Fields: radius (number)
 --  @tfield[opt] ModesDef modes List of mode definitions.
---  @tfield[opt] number jump_height
 --  @tfield[opt] number step_height
+--  @tfield[opt] number jump_height
 --  @tfield[opt] bool sneaky (default: false)
 local behavior_def = {
 	hostile = {"boolean", required=true},
@@ -388,8 +388,8 @@ local behavior_def = {
 		end,
 	},
 	modes = {"table", fields=mode_def},
-	jump_height = "number",
 	step_height = "number",
+	jump_height = "number",
 	follow = {{"string", "table"}},
 	sneaky = {"boolean", default=false},
 }
@@ -429,8 +429,6 @@ end
 --  @table MobDef
 --  @tfield[opt] string nametag
 --  @field hp Can be `int` or `table` ({min=<value>, max=<value>}).
---  @tfield[opt] number step_height (default: 1)
---  @tfield[opt] number jump_height (default: 1)
 --  @tfield PhysicalDef physical Physical definition.
 --  @tfield VisualDef visual Visual definition.
 --  @tfield[opt] table drops List of item drop definitions (`DropDef`).
@@ -446,8 +444,6 @@ local mob_def = {
 		required = true,
 		fields = {min={"number", required=true}, max={"number", required=true}},
 	},
-	step_height = "number",
-	jump_height = "number",
 	physical = {"table", required=true, fields=physical_def},
 	visual = {"table", required=true, fields=visual_def},
 	drops = {
