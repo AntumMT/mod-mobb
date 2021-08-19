@@ -7,39 +7,36 @@
 return function(name, def)
 	local new_def = {
 		nametag = def.nametag,
-		type = "monster",
 		passive = not def.behavior.hostile,
 		walk_velocity = def.behavior.speed:get("walk"),
 		run_velocity = def.behavior.speed:get("run"),
-		--stand_chance = def.mode_chance.idle * 100,
-		--walk_chance = def.mode_chance.walk * 100,
-		jump = type(def.stepheight) == "number" and def.stepheight > 0,
-		jump_height = def.stepheight,
-		stepheight = def.stepheight,
+		jump_height = def.behavior.jump_height,
+		stepheight = def.behavior.step_height,
 		view_range = def.behavior.search:get("radius"),
 		damage = def.behavior.combat.damage,
-		knock_back = def.knockback,
-		floats = def.floats,
+		knock_back = def.behavior.knockback,
+		follow = def.behavior.follow,
 		reach = def.behavior.combat.radius,
-		attack_chance = def.behavior.combat.chance,
 		attack_players = def.behavior.search:get("type") == "player",
-		attack_type = "dogfight",
-		blood_amount = 0,
-		makes_footstep_sound = not def.sneaky,
+		makes_footstep_sound = not def.behavior.sneaky,
 		sounds = {
 			distance = def.sounds.distance,
 			random = def.sounds.random,
 			war_cry = def.sounds.war_cry,
 			attack = def.sounds.war_cry,
+			shoot_attack = def.sounds.shoot_attack,
 			damage = def.sounds.damage,
 			death = def.sounds.death,
 			jump = def.sounds.jump,
+			fuse = def.sounds.fuse,
+			explode = def.sounds.explode,
 		},
 		drops = {},
-		visual = "mesh",
-		collisionbox = def.collisionbox,
-		textures = def.textures,
-		mesh = def.mesh,
+		collisionbox = def.physical.collisionbox,
+		selectionbox = def.physical.selectionbox,
+		visual_size = def.visual.size,
+		textures = def.visual.textures,
+		mesh = def.visual.mesh,
 		animation = {
 			stand_start = def.animation.idle.start,
 			stand_end = def.animation.idle.stop,
@@ -69,6 +66,17 @@ return function(name, def)
 		new_def.hp_max = def.hp
 	end
 
+	if def.modes.idle then
+		new_def.stand_chance = def.mode.idle.chance and def.mode.idle.chance * 100
+	end
+	if def.modes.walk then
+		new_def.walk_chance = def.mode.walk.chance  and def.mode.walk.chance * 100
+	end
+
+	if type(new_def.follow) == "string" then
+		new_def.follow = {new_def.follow}
+	end
+
 	for _, drop in ipairs(def.drops) do
 		local drop_chance = drop.chance
 		if not drop_chance then
@@ -80,19 +88,30 @@ return function(name, def)
 		table.insert(new_def.drops, {name=drop.name, min=drop.min, max=drop.max, chance=drop_chance})
 	end
 
+	for k, v in pairs(def.mobs_fields) do
+		if k ~= "spawn" then
+			new_def[k] = v
+		end
+	end
+
 	mobs:register_mob(name, new_def)
 
-	--[[ TODO:
-	mobs:spawn({
-		name = def.name,
-		nodes = def.spawn.nodes,
-		interval = def.spawn.interval,
-		chance = def.spawn.chance,
-		min_light = def.spawn.light_range.min,
-		max_light = def.spawn.light_range.max,
-		min_height = def.spawn.height_range.min,
-		max_height = def.spawn.height_range.max,
-		active_object_count = def.spawn.count.max,
-	})
-	]]
+	local base_name = name
+	while base_name:find(":") == 1 do
+		base_name = base_name:sub(2)
+	end
+
+	if def.spawn then
+		mobs:spawn({
+			name = base_name,
+			nodes = def.spawn.nodes,
+			interval = def.spawn.interval,
+			chance = def.spawn.chance,
+			min_light = def.spawn.light_range.min,
+			max_light = def.spawn.light_range.max,
+			min_height = def.spawn.height_range.min,
+			max_height = def.spawn.height_range.max,
+			active_object_count = def.spawn.active_object_count,
+		})
+	end
 end

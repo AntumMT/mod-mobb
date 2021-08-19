@@ -202,14 +202,24 @@ local check = {
 --
 --  @table PhysicalDef
 --  @tfield table collisionbox
+--  @tfield[opt] table selectionbox
 --  @tfield[opt] number rotation
 local physical_def = {
 	collisionbox = {
 		"table",
-		required=true,
 		check_value = function(value)
-			if #value == 0 then
-				return false, "(physical.collisionbox) cannot be empty"
+			if #value < 6 then
+				return false, "(physical.collisionbox) requires 6 values"
+			end
+
+			return true
+		end,
+	},
+	selectionbox = {
+		"table",
+		check_value = function(value)
+			if #value < 6 then
+				return false, "(physical.selectionbox) requires 6 values"
 			end
 
 			return true
@@ -221,8 +231,9 @@ local physical_def = {
 --- Visual definition.
 --
 --  @table VisualDef
---  @tparam string mesh
---  @tparam string table
+--  @tfield string mesh
+--  @tfield string table
+--  @tfield[opt] table size
 local visual_def = {
 	mesh = {"string", required=true},
 	textures = {
@@ -236,15 +247,19 @@ local visual_def = {
 			return true
 		end,
 	},
+	size = {
+		"table",
+		fields={{x="number", required=true}, {y="number", required=true}},
+	},
 }
 
 --- Item drop definition.
 --
 --  @table DropDef
---  @tparam string name
---  @tparam[opt] int min (default: 1)
---  @tparam[opt] int max (default: 1)
---  @tparam[opt] number chance Probability of drop between 0.0 to 1.0 (default: 1)
+--  @tfield string name
+--  @tfield[opt] int min (default: 1)
+--  @tfield[opt] int max (default: 1)
+--  @tfield[opt] number chance Probability of drop between 0.0 to 1.0 (default: 1)
 local drop_def = {
 	name = {"string", required=true},
 	min = "number",
@@ -267,33 +282,84 @@ local drop_def = {
 --- Spawn definition.
 --
 --  @table SpawnDef
-local spawn_def = {}
+--  @tfield table nodes
+--  @tfield[opt] int interval
+--  @tfield[opt] int chance
+--  @tfield[opt] table light_range
+--  @tfield[opt] table height_range
+--  @tfield[opt] int active_object_count
+local spawn_def = {
+	nodes = "table",
+	interval = "number",
+	chance = "number",
+	light_range = {
+		"table",
+		fields = {min={"number", required=true}, max={"number", required=true}},
+		default = {min=0, max=14},
+	},
+	height_range = {
+		"table",
+		fields = {min={"number", required=true}, max={"number", required=true}},
+		default = {min=-31000, max=31000},
+	},
+	active_object_count = "number",
+}
 
 --- Combat definition.
 --
 --  @table CombatDef
---  @tfield int damage
+--  @tfield[opt] int damage
+--  @tfield[opt] int radius
 local combat_def = {
-	damage = {
+	damage = "number",
+	radius = "number",
+}
+
+--- Individual mode definition.
+--
+--  @table ModeDef
+--  @tfield number chance Value ranging between 0.0-1.0.
+local mode_def = {
+	chance = {
 		"number",
-		default = 5,
+		check_value = function(value)
+			if value > 1 then
+				return false, "(mode.chance) can not be greater than 1.0"
+			elseif value < 0 then
+				return false, "(mode.chance) can not be less than 0"
+			end
+
+			return true
+		end,
 	},
+}
+
+--- Modes definition.
+--
+--  @table ModesDef
+--  @tfield ModeDef idle
+--  @tfield ModeDef walk
+local modes_def = {
+	idle = {"table"},
+	walk = {"table"},
 }
 
 --- Behavior definition.
 --
 --  @table BehaviorDef
---  @tparam bool hostile
---  @tparam[opt] CombatDef combat
---  @tparam table speed Fields can be "walk" & "run"
---  @tparam[opt] table search
---  @tparam[opt] table modes List of mode definitions (`ModeDef`).
+--  @tfield bool hostile
+--  @tfield[opt] bool knockback
+--  @tfield[opt] CombatDef combat
+--  @tfield table speed Fields can be "walk" & "run"
+--  @tfield[opt] table search Fields: radius (number)
+--  @tfield[opt] ModesDef modes List of mode definitions.
+--  @tfield[opt] number jump_height
+--  @tfield[opt] number step_height
+--  @tfield[opt] bool sneaky (default: false)
 local behavior_def = {
 	hostile = {"boolean", required=true},
-	combat = {
-		"table",
-		fields = combat_def,
-	},
+	knockback = {"boolean", default=true},
+	combat = {"table", fields=combat_def},
 	speed = {
 		"table",
 		fields = {walk="number", run="number"},
@@ -316,12 +382,16 @@ local behavior_def = {
 	},
 	search = {
 		"table",
-		fields={},
+		fields = {radius="number"},
 		inject = function()
 			return {["get"]=function(self, t) return self[t] end}
 		end,
 	},
-	modes = {"table", fields={}},
+	modes = {"table", fields=mode_def},
+	jump_height = "number",
+	step_height = "number",
+	follow = {{"string", "table"}},
+	sneaky = {"boolean", default=false},
 }
 
 --- Sounds definition.
@@ -358,11 +428,7 @@ end
 --
 --  @table MobDef
 --  @tfield[opt] string nametag
---  @tfield[opt] string type (mobs)
 --  @field hp Can be `int` or `table` ({min=<value>, max=<value>}).
---  @tfield[opt] bool knockback (default: true)
---  @tfield[opt] bool sneaky (default: false)
---  @tfield[opt] bool floats (default: false)
 --  @tfield[opt] number step_height (default: 1)
 --  @tfield[opt] number jump_height (default: 1)
 --  @tfield PhysicalDef physical Physical definition.
@@ -372,17 +438,14 @@ end
 --  @tfield[opt] BehaviorDef behavior FIXME: should this be required?
 --  @tfield[opt] SoundsDef sounds
 --  @tfield[opt] AnimationDef animation
+--  @tfield[opt] table mobs_fields See: [Mobs Redo API](https://notabug.org/TenPlus1/mobs_redo/src/master/api.txt)
 local mob_def = {
 	nametag = "string",
-	type = "string",
 	hp = {
 		{"number", "table"},
 		required = true,
 		fields = {min={"number", required=true}, max={"number", required=true}},
 	},
-	knockback = "boolean",
-	sneaky = "boolean",
-	floats = "boolean",
 	step_height = "number",
 	jump_height = "number",
 	physical = {"table", required=true, fields=physical_def},
@@ -410,6 +473,7 @@ local mob_def = {
 	},
 	sounds = {"table", fields=sounds_def},
 	animation = {"table", fields=animation_def},
+	mobs_fields = "table",
 }
 
 
@@ -428,6 +492,11 @@ mobb.register = function(name, def)
 	if not ret then
 		error("\"" .. name .. "\" registration failed: " .. err)
 	end
+
+	def.behavior.combat = def.behavior.combat or {}
+	def.modes = def.modes or {}
+
+	def.mobs_fields = def.mobs_fields or {}
 
 	return register(name, def)
 end

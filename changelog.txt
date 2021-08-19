@@ -2,3 +2,4 @@
 next
 ----
 - initial release
+- added mobs_redo registration support
