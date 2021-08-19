@@ -40,8 +40,6 @@ local version = 0
 file = {
 	"settings.lua",
 	"api.lua",
-	"register/mobkit.lua",
-	"register/mobs.lua",
 }
 
 new_type("chatcmd", "Chat Commands")
